@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCTV Surveillance Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-header h2 {
+            font-size: 1.3rem;
+            color: #333;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.85rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .badge-alert {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .alert-image {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .no-data {
+            padding: 3rem;
+            text-align: center;
+            color: #999;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎥 CCTV Surveillance Dashboard</h1>
+        <p>Monitor your cameras and alerts in real-time</p>
+    </div>
+    
+    <div class="container">
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Cameras</h3>
+                <div class="value">{{ cameras.count }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Cameras</h3>
+                <div class="value">{{ active_cameras_count }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Alerts</h3>
+                <div class="value">{{ total_alerts }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Unacknowledged</h3>
+                <div class="value" style="color: #ef4444;">{{ unacknowledged_alerts }}</div>
+            </div>
+        </div>
+        
+        <!-- Cameras Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>📹 Cameras</h2>
+                <a href="/admin/surveillance/camera/add/" class="btn btn-primary">Add Camera</a>
+            </div>
+            {% if cameras %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>RTSP URL</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for camera in cameras %}
+                    <tr>
+                        <td><strong>{{ camera.name }}</strong></td>
+                        <td style="font-family: monospace; font-size: 0.85rem; max-width: 400px; overflow: hidden; text-overflow: ellipsis;">{{ camera.rtsp_url }}</td>
+                        <td>
+                            {% if camera.is_active %}
+                                <span class="badge badge-active">Active</span>
+                            {% else %}
+                                <span class="badge badge-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ camera.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <div class="actions">
+                                {% if camera.is_active %}
+                                    <form method="post" action="/api/cameras/{{ camera.id }}/deactivate/" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                                    </form>
+                                {% else %}
+                                    <form method="post" action="/api/cameras/{{ camera.id }}/activate/" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                                    </form>
+                                {% endif %}
+                                <a href="/admin/surveillance/camera/{{ camera.id }}/change/" class="btn btn-primary btn-sm">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-data">
+                <p>No cameras registered yet.</p>
+                <a href="/admin/surveillance/camera/add/" class="btn btn-primary" style="margin-top: 1rem;">Add Your First Camera</a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Alerts Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🚨 Recent Alerts</h2>
+                <a href="/admin/surveillance/alert/" class="btn btn-primary">View All</a>
+            </div>
+            {% if alerts %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Camera</th>
+                        <th>Type</th>
+                        <th>Confidence</th>
+                        <th>Image</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts %}
+                    <tr>
+                        <td>{{ alert.timestamp|date:"M d, H:i:s" }}</td>
+                        <td><strong>{{ alert.camera.name }}</strong></td>
+                        <td><span class="badge badge-alert">{{ alert.alert_type|title }}</span></td>
+                        <td>{{ alert.confidence|floatformat:2 }}</td>
+                        <td>
+                            {% if alert.image %}
+                                <img src="{{ alert.image.url }}" alt="Alert" class="alert-image">
+                            {% else %}
+                                <span style="color: #999;">No image</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if alert.acknowledged %}
+                                <span class="badge badge-active">Acknowledged</span>
+                            {% else %}
+                                <span class="badge badge-inactive">New</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-data">
+                <p>No alerts yet. Alerts will appear here when the pipeline detects events.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
+
